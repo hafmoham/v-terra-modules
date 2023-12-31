@@ -5,7 +5,7 @@ provider "azurerm" {
 ########## Modules ################
 
 module "app-service" {
-    source = "./modules/app-service/"
+    source = "../modules/app-service/"
     location            = var.location
     environment         = var.environment
     owner               = var.owner
