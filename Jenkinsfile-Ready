@@ -1,0 +1,84 @@
+pipeline{
+    agent any 
+    environment {
+        TF_IN_AUTOMATION = "true"
+        // KEYVAULT_URL = credentials('azure_keyvault_url') # keyVaultURL not able to be dereferenced with ${env.KEYVAULT_URL}, keeping for future reference
+    }
+    parameters {
+        string(name: 'AZURE_KEYVAULT_URL', defaultValue: 'https://kv-cse-jenkins-example.vault.azure.net')
+    }
+
+    stages {
+    
+        stage('Terraform Init'){
+            
+
+
+            steps {
+                    withCredentials([azureServicePrincipal(
+                    credentialsId: 'EIS-PREPROD-INT-DEVOPS-SP',
+                    subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
+                    clientIdVariable: 'ARM_CLIENT_ID',
+                    clientSecretVariable: 'ARM_CLIENT_SECRET',
+                    tenantIdVariable: 'ARM_TENANT_ID'
+                )]) {
+                        bat """
+                        terraform -version
+                        dir
+                        cd Dev\\VirtualMachines
+                        terraform init 
+                        """
+
+                }
+             }
+        }
+
+        stage('Terraform Plan'){
+            
+
+
+            steps {
+                    withCredentials([azureServicePrincipal(
+                    credentialsId: 'EIS-PREPROD-INT-DEVOPS-SP',
+                    subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
+                    clientIdVariable: 'ARM_CLIENT_ID',
+                    clientSecretVariable: 'ARM_CLIENT_SECRET',
+                    tenantIdVariable: 'ARM_TENANT_ID'
+                )]) {
+                    bat """
+                    cd Dev\\VirtualMachines
+                        terraform plan 
+                        """
+                }
+             }
+        } 
+
+        stage('Waiting for Approval'){
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    input (message: "Deploy the infrastructure?")
+                }
+            }
+        }
+
+        stage('Terraform Apply'){
+            
+       
+
+            steps {
+                    withCredentials([azureServicePrincipal(
+                    credentialsId: 'EIS-PREPROD-INT-DEVOPS-SP',
+                    subscriptionIdVariable: 'ARM_SUBSCRIPTION_ID',
+                    clientIdVariable: 'ARM_CLIENT_ID',
+                    clientSecretVariable: 'ARM_CLIENT_SECRET',
+                    tenantIdVariable: 'ARM_TENANT_ID'
+                )]) {
+                        bat """
+                        cd Dev\\VirtualMachines
+                        terraform apply -auto-approve
+                        """
+                     }
+             }
+        } 
+    }
+}
