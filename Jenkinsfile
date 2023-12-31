@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     dir('terraform') {
-                    sh 'terraform init'
+                    sh 'terraform init -chdir="./modules" -upgrade'
                     sh 'terraform apply --auto-approve'
                     }
             }
